@@ -11,6 +11,7 @@ class NotionUploader:
     def upload(self, summary: dict):
         title = f"📞 {summary['call_target']} - {summary['call_date']}"
 
+        # 통화 요약 본문
         children = [
             {
                 "object": "block",
@@ -28,6 +29,7 @@ class NotionUploader:
             },
         ]
 
+        # 할일 목록 (to_do 체크박스)
         action_items = summary.get("action_items", [])
         if action_items:
             children.append({
@@ -57,17 +59,22 @@ class NotionUploader:
                 }
             })
 
+        # 실제 "업무 관리" DB 스키마에 맞게 매핑
+        # 업무내용(title), 요청일(date), 대화상대(text), 우선순위(select), 비고(text)
         self.client.pages.create(
             parent={"database_id": self.database_id},
             properties={
-                "Name": {
+                "업무내용": {
                     "title": [{"type": "text", "text": {"content": title}}]
                 },
-                "통화일자": {
+                "요청일": {
                     "date": {"start": summary["call_date"]}
                 },
-                "통화대상": {
+                "대화상대": {
                     "rich_text": [{"type": "text", "text": {"content": summary["call_target"]}}]
+                },
+                "비고": {
+                    "rich_text": [{"type": "text", "text": {"content": summary.get("summary", "")[:200]}}]
                 },
             },
             children=children
